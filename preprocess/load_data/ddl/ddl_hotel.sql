@@ -8,12 +8,9 @@ CREATE TABLE work.hotel_tb
   hotel_longitude FLOAT NOT NULL,
   is_business     BOOLEAN NOT NULL,
   PRIMARY KEY(hotel_id)
-)
-DISTSTYLE KEY
-DISTKEY (hotel_id);
+);
 
-COPY work.hotel_tb
-FROM 's3://awesomebk/hotel.csv'
-CREDENTIALS 'aws_access_key_id=XXXXX;aws_secret_access_key=XXXXX'
-REGION AS 'us-east-1'
-CSV IGNOREHEADER AS 1;
+-- 上記のSQL文と併用できないので，下のコードはコマンドラインに直接入力
+-- COPY work.hotel_tb
+-- FROM '/Users/kaorubabasaki/Documents/sample_code/awesomebook/data/hotel.csv' with csv header
+
