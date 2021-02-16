@@ -1,0 +1,60 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+library(dplyr)
+source('preprocess/load_data/data_loader.R')
+load_hotel_reserve()
+```
+
+## 2.1データ列の抽出
+### 2.1Not Awesome
+数値ベクトルで指定
+```{r 02_1na}
+# reserve_tbの2次元配列の1次元目を空にすることで、すべての行を抽出
+# reserve_tbの2次元配列の2次元目に数値ベクトルを指定することで、複数の列を抽出
+reserve_tb[, c(1, 2, 3, 4, 5, 6, 7)]
+```
+## 2.1Awesome
+文字ベクトルで指定
+```{r}
+# reserve_tbの2次元配列の2次元目に文字ベクトルを指定することで、指定した名前の列を抽出
+reserve_tb[, c('reserve_id', 'hotel_id', 'customer_id', 'reserve_datetime',
+               'checkin_date', 'checkin_time', 'checkout_date')]
+```
+
+## 2.1Awesome2
+```{r}
+reserve_tb %>%
+
+  # select関数の引数に抽出する列名を入力することによって、列を抽出
+  select(reserve_id, hotel_id, customer_id, reserve_datetime,
+         checkin_date, checkin_time, checkout_date) %>%
+
+  # Rのdata.frameに変換(以降の例題では省略)
+  as.data.frame()
+
+```
+パイプの左側にあるオブジェクトがパイプの右側にある関数の第一引数となる!
+例↓
+```{r}
+select(reserve_tb,reserve_id, hotel_id, customer_id, reserve_datetime,
+         checkin_date, checkin_time, checkout_date)
+```
+
+## 2.1 Not Awesome 2
+```{r}
+reserve_tb %>%
+
+  # select関数の引数に抽出する列名を入力することによって、列を抽出
+  # starts_with関数を利用して、先頭にcheckが付いている列を抽出
+  select(reserve_id, hotel_id, customer_id, reserve_datetime,
+         starts_with('check'))
+```
+
+
+
+
