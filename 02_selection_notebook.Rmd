@@ -1,7 +1,11 @@
 ---
-title: "R Notebook"
+title: "awesomebook 002 selection"
 output: html_notebook
 ---
+```{r}
+getwd()
+list.files()
+```
 
 
 ```{r}
@@ -54,6 +58,88 @@ reserve_tb %>%
   select(reserve_id, hotel_id, customer_id, reserve_datetime,
          starts_with('check'))
 ```
+## 2.2 条件指定による抽出
+### 2.2 Not Awesome
+```{r}
+# checkin_dateの条件式によって、判定結果のTRUE/FALSEのベクトルを取得
+# 条件式を&でつなぐことによって、判定結果がともにTRUEの場合のみTRUEとなるベクトルを取得
+# reserve_tbの2次元配列の1次元目にTRUE/FALSEのベクトルを指定し、条件適合する行を抽出
+# reserve_tbの2次元配列の2次元目を空にすることで、すべての列を抽出
+reserve_tb[reserve_tb$checkin_date >= '2016-10-12' &
+           reserve_tb$checkin_date <= '2016-10-13', ]
+```
+
+### 2.2 Not Awesome 2
+```{r}
+# which関数に条件式を指定して、判定結果がTRUEとなる行番号のベクトルを取得
+# intersect関数によって、引数の行番号のベクトルに共に出現する行番号のみに絞り込み
+# reserve_tbの2次元配列の1次元目に行番号のベクトルを指定し、条件適合する行を抽出
+reserve_tb[
+  intersect(which(reserve_tb$checkin_date >= '2016-10-12'),
+            which(reserve_tb$checkin_date <= '2016-10-13')), ]
+```
+
+```{r}
+#which関数の例
+which(reserve_tb$checkin_date == '2016-10-12')
+```
+
+intersect関数は，全ての引数の数値ベクトルに存在する数値のみに絞り込む（積集合）。
+union関数は，条件式のいずれかを満たす場合に抽出を行う（和集合）。
+
+### 2.2 Not Awesome 3
+```{r}
+reserve_tb %>%
+
+  # filter関数にcheckin_dateの条件式を指定し、条件適合する行を抽出
+  filter(checkin_date >= '2016-10-12' & checkin_date <= '2016-10-13')
+```
+
+### 2.2 Awesome
+```{r}
+reserve_tb %>%
+
+  # as.Date関数によって、文字列を日付型に変換
+  # （第9章「9-1 文字列、数値から日時型、日付型への変換」で解説)
+  # between関数によって、checkin_dateの値の範囲指定
+  # 第一引数に列の値，2,3番目の引数に指定する条件の範囲値を指定
+  filter(between(as.Date(checkin_date),
+                 as.Date('2016-10-12'), as.Date('2016-10-13')))
+```
+
+## 2-3 データ値に基づかないサンプリング
+### 2-3 Awesome
+```{r}
+# reserve_tbから50%サンプリング
+sample_frac(reserve_tb, 0.5)
+```
+## 2-4 集約IDに基づくサンプリング
+### 2-4 Awesome
+```{r}
+# reserve_tbから顧客IDのベクトルを取得し、重複を排除した顧客IDベクトルを作成
+all_id <- unique(reserve_tb$customer_id)
+
+reserve_tb %>%
+
+  # sample関数を利用し、ユニークな顧客IDから50%サンプリングし、抽出対象のIDを取得
+  # 抽出対象のIDと一致する行のみをfilter関数によって抽出
+  # %in% は，指定したベクトル内の値のいづれかと一致するとTRUEを返す
+  filter(customer_id %in% sample(all_id, size=length(all_id) * 0.5))
+```
+
+```{r}
+# R %in% operator
+v1 <- 3
+t <- c(1,2,3,4,5,6,7,8)
+v1 %in% t
+```
+
+
+
+
+
+
+
 
 
 
