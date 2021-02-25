@@ -1,0 +1,162 @@
+---
+title: "awesomebook 003 aggregation"
+output: html_notebook
+---
+
+
+```{r}
+# getwd()
+list.files()
+```
+```{r}
+# getwd()
+list.files('../load_data')
+```
+
+
+```{r}
+library(dplyr)
+setwd('~/Documents/sample_code/awesomebook')
+source('preprocess/load_data/data_loader.R')
+load_hotel_reserve()
+```
+
+## 3-1 データ数，種類数の算出
+
+### Awesome
+```{r}
+reserve_tb %>%
+
+  # group_by関数によって、集約単位をhotel_idに指定
+  group_by(hotel_id) %>%
+
+  # summarise関数を使って集約処理を指定
+  # n関数を使って、予約数をカウント
+  # n_distinct関数にcustomer_idを指定して、customer_idのユニークカウント
+  summarise(rsv_cnt=n(),
+            cus_cnt=n_distinct(customer_id))
+```
+
+## 3-2 合計値の算出
+### Awesome
+```{r}
+reserve_tb %>%
+
+  # group_byにhotel_idとpeople_numの組み合わせを指定
+  group_by(hotel_id, people_num) %>%
+
+  # sum関数をtotal_priceに適用して、売上合計金額を算出
+  summarise(price_sum=sum(total_price))
+```
+
+## 3-3 極値，代表値の算出
+### Awesome
+```{r}
+reserve_tb %>%
+  group_by(hotel_id) %>%
+
+  # quantile関数にtotal_priceと対象の値を指定して20パーセントタイル値を算出
+  summarise(price_max=max(total_price),
+            price_min=min(total_price),
+            price_avg=mean(total_price),
+            price_median=median(total_price),
+            price_20per=quantile(total_price, 0.2))
+```
+
+## 3-4 ばらつき具合の算出
+### 3-4Awesome
+```{r}
+reserve_tb %>%
+  group_by(hotel_id) %>%
+
+  # var関数にtotal_priceを指定し、分散値を算出
+  # sd関数にtotal_priceを指定し、標準偏差値を算出
+  # データ数が1件だったときにNAとなるので、
+  # coalesce関数を利用して、NAの場合に0に置換
+  summarise(price_var=coalesce(var(total_price), 0),
+            price_std=coalesce(sd(total_price), 0))
+```
+
+## 3-5 最頻値の算出
+### 3-5 Not Awesome
+```{r}
+# round関数で、total_priceを1000単位で四捨五入
+# table関数で、算出した金額別の予約数を算出
+# (ベクトルの属性情報(names)が算出した金額、ベクトルの値が予約数)
+# which.max関数によって、予約数が最大のベクトル要素を取得
+# names関数によって、予約数が最大のベクトル要素の属性情報(names)を取得
+names(which.max(table(round(reserve_tb$total_price, -3))))
+```
+
+```{r}
+round(reserve_tb$total_price, -3)
+```
+
+```{r}
+table(round(reserve_tb$total_price, -3))
+```
+
+```{r}
+class(table(round(reserve_tb$total_price, -3)))
+```
+
+```{r}
+which.max(table(round(reserve_tb$total_price, -3)))
+```
+
+## 3-6 順位の算出
+### 3-6a Awesome
+```{r}
+# row_number関数で並び替えるために、データ型を文字列からPOSIXct型に変換
+# （「第10章 日時型で解説」）
+reserve_tb$reserve_datetime <-
+  as.POSIXct(reserve_tb$reserve_datetime, format='%Y-%m-%d %H:%M:%S')
+
+reserve_tb %>%
+
+  # 集約単位の指定はgroup_by関数を利用
+  group_by(customer_id) %>%
+
+  # mutate関数によって、新たな列log_noを追加
+  # row_number関数によって、予約日時を基準とした順位を計算
+  mutate(log_no=row_number(reserve_datetime))
+```
+
+### 3-6b Awesome
+```{r}
+reserve_tb %>%
+
+  # ホテルごとの予約回数の計算のために、hotel_idを集約単位に指定
+  group_by(hotel_id) %>%
+
+  # データの件数を計算し、ホテルごとの予約回数を計算
+  summarise(rsv_cnt=n()) %>%
+
+  # 予約回数をもとに順位を計算、desc関数を利用することで降順に変更
+  # transmute関数によって、rsv_cnt_rankを生成し、
+  # 必要なhotel_idとrsv_cnt_rankのみ抽出
+  transmute(hotel_id, rsv_cnt_rank=min_rank(desc(rsv_cnt)))
+```
+
+```{r}
+# 上コードの前半部分
+reserve_tb %>%
+  group_by(hotel_id) %>%
+  summarise(rsv_cnt=n())
+```
+
+```{r}
+# transmute()は，mutate()の、指定したカラムしか残さないバージョン
+#だから，mutate()を使うとこうなる
+reserve_tb %>%
+  group_by(hotel_id) %>%
+  summarise(rsv_cnt=n()) %>%
+  mutate(rsv_cnt_rank=min_rank(desc(rsv_cnt))) %>%
+  select(hotel_id,rsv_cnt_rank)
+```
+
+
+
+
+
+
